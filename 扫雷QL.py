@@ -121,9 +121,9 @@ class Net(nn.Module):
         return y
 
 
-Gamma = 0.98
-lr = 0.03
-EPISILON = 0.9
+Gamma = 0.99
+lr = 0.0005
+EPISILON = 0.3
 row = 5
 col = 5
 n_outputs = row*col
@@ -137,10 +137,11 @@ class Dqn():
         self.action_net = Net(row, col)
         self.optimizer = t.optim.Adam(self.action_net.parameters(), lr=lr)
         self.loss_func = nn.MSELoss()
+        self.learncounter = 0
 
     def choose_action(self, state):
         state = Variable(np.array(state)).float()    
-        if np.random.uniform() < self.EPISILON:
+        if np.random.uniform() < self.EPISILON*(1.0001**self.learncounter):
             action_list = self.action_net(state).data.numpy()
             action = int(np.where(action_list==np.max(action_list))[0])
         else:
@@ -157,6 +158,7 @@ class Dqn():
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        self.learncounter += 1
 
 def transmit(state):
     tmp = []
@@ -183,9 +185,10 @@ if __name__ == "__main__":
             dqn.learn(state, reward, next_state)
             step += 1
         graph = Model(row, col)
-        if total_reward >= 0:
+        if total_reward >= 50:
             print('total_reward={}, total_step={}'.format(total_reward, step))
             e += 1
+    t.save(dqn.action_net ,'saolei_net.pkl')
 
 
 
